@@ -1,0 +1,192 @@
+---
+title: "Bellabeat Data"
+author: "Jamie Crawford"
+date: "2022-12-26"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+
+```{r} setup, include=FALSE}
+knitr::opts_chunk$set(echo=TRUE)
+```
+
+## Bellabeat Data Report
+
+### Table of Contents 
+#### 1. Ask Phase
+#### 2. Prepare
+#### 3. Process
+#### 4. Analyse and Share
+#### 5. Act Phase
+
+
+#### 1. Ask Phase
+
+This report was commissioned by Bellabeat cofounder Urška Sršken. The goal of this report was to analyse consumer trends in smart device usage and gather insights that could be applied to improve Bellabeat's own range of smart device. The following questions were used to guide the report.
+
+1. What are some trends in smart device usage?
+2. How could these trends apply to Bellabeat customers?
+3. How could these trends help influence Bellabeat marketing strategy?
+
+
+#### 2. Prepare 
+
+The first step was to determine which smart device would used for the data analysis.
+The dataset 'FitBit Fitness Tracker Data' was found on Kaggle and used to discover consumer usage trends regarding the Fitbit smartwatch. This dataset can be found at <https://www.kaggle.com/datasets/arashnic/fitbit>.
+
+#### 3. Process
+
+Before the dataset was uploaded to R, several relevant packages were loaded. These are listed below.
+
+```{r}
+library(dbplyr)
+library(tidyverse)
+library(lubridate)
+library(readr)
+library(tidyr)
+library(tibble)
+library(tools)
+library(ggplot2)
+
+```
+
+This dataset was then uploaded to R.
+
+```{r}
+d1 <- read_csv("d1.csv")
+d2 <- read_csv("d2.csv")
+d3 <- read_csv("d3.csv")
+d4 <- read_csv("d4.csv")
+d5 <- read_csv("d5.csv")
+d6 <- read_csv("d6.csv")
+d7 <- read_csv("d7.csv")
+d8 <- read_csv("d8.csv")
+d9 <- read_csv("d9.csv")
+d10 <- read_csv("d10.csv")
+d11 <- read_csv("d11.csv")
+d12 <- read_csv("d12.csv")
+d13 <- read_csv("d13.csv")
+d14 <- read_csv("d14.csv")
+d15 <- read_csv("d15.csv")
+d16 <- read_csv("d16.csv")
+d17 <- read_csv("d17.csv")
+d18 <- read_csv("d18.csv")
+library(dplyr)
+total <- read_csv("total_final.csv")
+```
+
+
+Copies were then made of the datasets during cleaning and processing.
+
+```{r}
+data_copy1 <- d1
+data_copy2 <- d2
+data_copy3 <- d3
+data_copy4 <- d4
+data_copy5 <- d5
+data_copy6 <- d6
+data_copy7 <- d7
+data_copy8 <- d8
+data_copy17 <- d17
+data_copy18 <- d18
+
+```
+
+
+Relevant datasets were then checked for duplicates, with duplicates then removed and confirmed.
+
+```{r}
+sum(duplicated(data_copy17))
+sum(duplicated(data_copy18))
+
+data_copy17 <- data_copy17 %>%
+  drop_na()
+
+sum(duplicated(data_copy17))
+```
+
+Column names were then standardised. 
+
+```{r}
+data_copy1 <- rename_with(data_copy1,tolower)
+data_copy2 <- rename_with(data_copy2,tolower)
+data_copy3 <- rename_with(data_copy3,tolower)
+data_copy4 <- rename_with(data_copy4,tolower)
+data_copy17 <- rename_with(data_copy17,tolower)
+data_copy18 <- rename_with(data_copy18,tolower)
+```
+
+Date columns were also standardised to allow for easier analysis and dataset merging. 
+```{r}
+data_copy1 <- data_copy1 %>%
+  rename(date = activitydate) %>%
+  mutate(date = as_date(date, format = "%m/%d/%Y"))
+
+data_copy17 <- data_copy17 %>%
+  rename(date = sleepday) %>%
+  mutate(date = as_date(date,format ="%m/%d/%Y %I:%M:%S %p" , tz=Sys.timezone()))
+```
+
+
+New columns were added to the data_copy1 dataset to provide mean columns of daily steps and daily calorie totals. 
+
+```{r}
+data_copy1 <- data_copy1 %>%  
+  group_by(id) %>%
+  mutate(mean_daily_steps.new = mean(totalsteps))
+
+data_copy1 <- data_copy1 %>%
+  group_by(id) %>%
+ mutate(mean_daily_calories.new = mean(calories))
+
+data_copy17 <- data_copy17 %>%
+  group_by(id)%>%
+  mutate(mean_totalminutesasleep.new = mean(totalminutesasleep))
+
+
+```
+
+
+
+
+#### 4. Analyse and Share
+
+A simple comparison of daily steps and daily calories is shown here. 
+
+```{r}
+ggplot(data = data_copy1) +
+  geom_point(mapping = aes(x = mean_daily_steps.new, y = mean_daily_calories.new))
+```
+
+This graph shows, as expected, a strong corrolation between the average daily number of steps a Fitbit user took and the average daily calories that they burned. 
+
+We can also see some relation between very active minutes and calories burned on a daily basis.
+```{r}
+ggplot(data = data_copy1) +
+  geom_smooth(mapping = aes(x = veryactiveminutes, y = mean_daily_calories.new))
+```
+
+It is clear that Fitbit users with the high totals of very active minutes were burning the most calories on an average daily basis. However, there are appears to be a users at the highest level of very active minutes that actually saw a drop off in daily calories burned. 
+
+```{r}
+ggplot(data = total) + 
+  geom_point(mapping = aes(x = mean_hoursasleep.new, y = mean_daily_calories.new))
+```
+
+This ggplot shows the relationship between hours of sleep that users averaged over the data colleciton period and their daily calories burned. This shows that on average those within the optimal range of sleep, as recommended to be 7-9 hours of sleep per night, were able to burn more calories. This suggests that either too much, or too little, sleep is detrimental to achieving daily calorie targets.
+
+#### 5. Act Phase
+
+There are some possible actions then that Bellabeat can take following this data analysis. 
+
+1. Fitbit users that averaged the NHS recommended 7-9 hours sleep per night were more likely to burn more calories per day than those that were either under or over that figure. Bellabeat could incorporate factoid notifications into their smartwatch devices, informing users of the benefits of quality sleep time. Reminders can also be used to tell users to go to bed at a time set by the user. 
+
+
+2. On average, users that achieved more very active minutes burned more calories. Achieving daily steps targets however, whether this be the popular '10K' steps figure or not, can be a realistic guide to smart watch users looking to burn more calories without highly intense exercise. Bellabeat could encourage users to hit daily step targets according to their calorie-burning goals through notifications. Custom step plans could be made for users, so that according to their schedules they could ahcive higher step totals on some days and lower totals on other days so that their weekly average step target is achieved.
+
+
+
+
